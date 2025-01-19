@@ -2,7 +2,7 @@ services:
   kudb:
     image: mysql:8.0
     container_name: kudb
-    restart: unless-stopped
+    restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${ROOT_PASSWOD:-Kuboard123}
       - MYSQL_DATABASE=kuboard
@@ -23,7 +23,7 @@ services:
   kuboard:
     image: eipwork/kuboard:v4
     container_name: kuboard
-    restart: unless-stopped
+    restart: always
     ports:
       - "20080:80"
     environment:
