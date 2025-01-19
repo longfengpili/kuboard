@@ -1,0 +1,52 @@
+services:
+  kudb:
+    image: mysql:8.0
+    container_name: kudb
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${ROOT_PASSWOD:-Kuboard123}
+      - MYSQL_DATABASE=kuboard
+      - MYSQL_USER=${DB_USERNAME:-kuboard}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-Kuboard123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - mysql-init:/docker-entrypoint-initdb.d
+      - ./mysql/my.cnf:/etc/mysql/conf.d/mysql.cnf
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${ROOT_PASSWOD:-Kuboard123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kuboard:
+    image: eipwork/kuboard:v4
+    container_name: kuboard
+    restart: unless-stopped
+    ports:
+      - "20080:80"
+    environment:
+      - TZ=Asia/Shanghai
+      - DB_DRIVER=com.mysql.cj.jdbc.Driver
+      - DB_URL=jdbc:mysql://kudb:3306/kuboard?serverTimezone=Asia/Shanghai
+      - DB_USERNAME=${DB_USERNAME:-kuboard}
+      - DB_PASSWORD=${DB_PASSWORD:-Kuboard123}
+    depends_on:
+      kudb:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data  
+
+  mysql-init:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./mysql
